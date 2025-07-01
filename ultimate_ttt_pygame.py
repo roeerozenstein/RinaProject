@@ -93,20 +93,29 @@ def get_valid_moves():
 def ai_move():
     global active_sub
     valid_moves = get_valid_moves()
+    print('AI valid_moves:', valid_moves)
     if not valid_moves:
+        print('No valid moves for AI')
         return None  # No valid moves, likely a tie
     move = None
-    if active_sub:
-        # If the sub-board is finished, allow move anywhere
-        if macro_board[active_sub[0]][active_sub[1]]:
-            move = minimax(True, copy.deepcopy(board))
-        else:
-            min_x, min_y = active_sub[0]*3, active_sub[1]*3
-            sub_board = get_sub_board_from_coordinates(board, min_x, min_y)
-            move = minimax(True, copy.deepcopy(sub_board))
+    if active_sub and not macro_board[active_sub[0]][active_sub[1]]:
+        min_x, min_y = active_sub[0]*3, active_sub[1]*3
+        sub_board = get_sub_board_from_coordinates(board, min_x, min_y)
+        move = minimax(True, copy.deepcopy(sub_board))
+        print('AI minimax (sub_board) move:', move)
+        if isinstance(move, list) and len(move) == 2:
             move = [move[0]+min_x, move[1]+min_y]
     else:
         move = minimax(True, copy.deepcopy(board))
+        print('AI minimax (full board) move:', move)
+    # Ensure the move is valid and well-formed
+    if not (isinstance(move, list) and len(move) == 2 and all(isinstance(x, int) for x in move)):
+        print('AI move from minimax is invalid, picking random')
+        move = random.choice(valid_moves)
+    if move not in valid_moves:
+        print('AI move not in valid_moves, picking random')
+        move = random.choice(valid_moves)
+    print('AI final move:', move)
     update_board('O', move, board)
     update_macro_board('O', move, macro_board, board)
     return move
@@ -136,17 +145,19 @@ def main():
             continue
         if current_player == 'X':
             # Human turn
+            valid_moves = get_valid_moves()
+            print('USER valid_moves:', valid_moves)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = pygame.mouse.get_pos()
                     row, col = y//CELL_SIZE, x//CELL_SIZE
-                    valid_moves = get_valid_moves()
                     if [row, col] in valid_moves:
                         update_board('X', [row, col], board)
                         update_macro_board('X', [row, col], macro_board, board)
                         last_move = (row, col)
+                        print('USER final move:', [row, col])
                         # Set next active sub-board
                         active_sub = (row%3, col%3)
                         if macro_board[active_sub[0]][active_sub[1]]:
