@@ -98,6 +98,7 @@ def ai_move():
         print('No valid moves for AI')
         return None  # No valid moves, likely a tie
     move = None
+    # Only use minimax if restricted to a sub-board that is not finished
     if active_sub and not macro_board[active_sub[0]][active_sub[1]]:
         min_x, min_y = active_sub[0]*3, active_sub[1]*3
         sub_board = get_sub_board_from_coordinates(board, min_x, min_y)
@@ -105,16 +106,17 @@ def ai_move():
         print('AI minimax (sub_board) move:', move)
         if isinstance(move, list) and len(move) == 2:
             move = [move[0]+min_x, move[1]+min_y]
+        # Ensure the move is valid and well-formed
+        if not (isinstance(move, list) and len(move) == 2 and all(isinstance(x, int) for x in move)):
+            print('AI move from minimax is invalid, picking random')
+            move = random.choice(valid_moves)
+        if move not in valid_moves:
+            print('AI move not in valid_moves, picking random')
+            move = random.choice(valid_moves)
     else:
-        move = minimax(True, copy.deepcopy(board))
-        print('AI minimax (full board) move:', move)
-    # Ensure the move is valid and well-formed
-    if not (isinstance(move, list) and len(move) == 2 and all(isinstance(x, int) for x in move)):
-        print('AI move from minimax is invalid, picking random')
+        # If not restricted, pick a random valid move (do NOT use minimax on the full board)
         move = random.choice(valid_moves)
-    if move not in valid_moves:
-        print('AI move not in valid_moves, picking random')
-        move = random.choice(valid_moves)
+        print('AI random move (not restricted to sub-board):', move)
     print('AI final move:', move)
     update_board('O', move, board)
     update_macro_board('O', move, macro_board, board)
@@ -132,6 +134,7 @@ def main():
     global current_player, active_sub, last_move
     running = True
     winner = None
+    user_turn_announced = False
     while running:
         draw_board()
         if winner:
@@ -145,14 +148,17 @@ def main():
             continue
         if current_player == 'X':
             # Human turn
-            valid_moves = get_valid_moves()
-            print('USER valid_moves:', valid_moves)
+            if not user_turn_announced:
+                valid_moves = get_valid_moves()
+                print('USER valid_moves:', valid_moves)
+                user_turn_announced = True
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = pygame.mouse.get_pos()
                     row, col = y//CELL_SIZE, x//CELL_SIZE
+                    valid_moves = get_valid_moves()
                     if [row, col] in valid_moves:
                         update_board('X', [row, col], board)
                         update_macro_board('X', [row, col], macro_board, board)
@@ -163,6 +169,7 @@ def main():
                         if macro_board[active_sub[0]][active_sub[1]]:
                             active_sub = None
                         current_player = 'O'
+                        user_turn_announced = False
                         winner = check_game_end()
         else:
             # AI turn
@@ -176,6 +183,7 @@ def main():
             if macro_board[active_sub[0]][active_sub[1]]:
                 active_sub = None
             current_player = 'X'
+            user_turn_announced = False
             winner = check_game_end()
     pygame.quit()
 
