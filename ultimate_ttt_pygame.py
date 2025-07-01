@@ -18,6 +18,8 @@ HIGHLIGHT_COLOR = (200, 200, 0)
 FONT = pygame.font.SysFont(None, 36)
 LIGHT_BLUE = (173, 216, 230)
 BIG_FONT = pygame.font.SysFont(None, 72)
+LAST_MOVE_COLOR = (255, 140, 0)  # Orange
+LAST_MOVE_FONT = pygame.font.SysFont(None, 60)
 
 screen = pygame.display.set_mode((SIZE, SIZE))
 pygame.display.set_caption('Ultimate Tic-Tac-Toe: Human vs AI')
@@ -27,6 +29,7 @@ macro_board = [['' for _ in range(3)] for _ in range(3)]
 board = [['' for _ in range(9)] for _ in range(9)]
 current_player = 'X'  # Human is X, AI is O
 active_sub = None  # (row, col) of active sub-board, or None if any
+last_move = None  # (row, col) of the last move
 
 def draw_board():
     screen.fill(BG_COLOR)
@@ -59,8 +62,13 @@ def draw_board():
         for j in range(9):
             sub_i, sub_j = i//3, j//3
             if not macro_board[sub_i][sub_j] and board[i][j]:
-                color = X_COLOR if board[i][j] == 'X' else O_COLOR
-                text = FONT.render(board[i][j], True, color)
+                if last_move == (i, j):
+                    color = LAST_MOVE_COLOR
+                    font = LAST_MOVE_FONT
+                else:
+                    color = X_COLOR if board[i][j] == 'X' else O_COLOR
+                    font = FONT
+                text = font.render(board[i][j], True, color)
                 rect = text.get_rect(center=(j*CELL_SIZE+CELL_SIZE//2, i*CELL_SIZE+CELL_SIZE//2))
                 screen.blit(text, rect)
     pygame.display.flip()
@@ -101,7 +109,7 @@ def check_game_end():
     return None
 
 def main():
-    global current_player, active_sub
+    global current_player, active_sub, last_move
     running = True
     winner = None
     while running:
@@ -127,6 +135,7 @@ def main():
                     if [row, col] in valid_moves:
                         update_board('X', [row, col], board)
                         update_macro_board('X', [row, col], macro_board, board)
+                        last_move = (row, col)
                         # Set next active sub-board
                         active_sub = (row%3, col%3)
                         if macro_board[active_sub[0]][active_sub[1]]:
@@ -137,6 +146,7 @@ def main():
             # AI turn
             pygame.time.wait(500)
             move = ai_move()
+            last_move = tuple(move)
             active_sub = (move[0]%3, move[1]%3)
             if macro_board[active_sub[0]][active_sub[1]]:
                 active_sub = None
