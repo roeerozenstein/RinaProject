@@ -83,17 +83,28 @@ def get_active_sub(valid_moves):
 def get_valid_moves():
     valid = compute_valid_coordinates(board)
     if active_sub:
+        # If the sub-board is finished, allow any valid move
+        if macro_board[active_sub[0]][active_sub[1]]:
+            return valid
         min_x, min_y = active_sub[0]*3, active_sub[1]*3
         valid = [c for c in valid if min_x <= c[0] < min_x+3 and min_y <= c[1] < min_y+3]
     return valid
 
 def ai_move():
-    # AI is 'O', plays in the active sub-board
+    global active_sub
+    valid_moves = get_valid_moves()
+    if not valid_moves:
+        return None  # No valid moves, likely a tie
+    move = None
     if active_sub:
-        min_x, min_y = active_sub[0]*3, active_sub[1]*3
-        sub_board = get_sub_board_from_coordinates(board, min_x, min_y)
-        move = minimax(True, copy.deepcopy(sub_board))
-        move = [move[0]+min_x, move[1]+min_y]
+        # If the sub-board is finished, allow move anywhere
+        if macro_board[active_sub[0]][active_sub[1]]:
+            move = minimax(True, copy.deepcopy(board))
+        else:
+            min_x, min_y = active_sub[0]*3, active_sub[1]*3
+            sub_board = get_sub_board_from_coordinates(board, min_x, min_y)
+            move = minimax(True, copy.deepcopy(sub_board))
+            move = [move[0]+min_x, move[1]+min_y]
     else:
         move = minimax(True, copy.deepcopy(board))
     update_board('O', move, board)
@@ -146,6 +157,9 @@ def main():
             # AI turn
             pygame.time.wait(500)
             move = ai_move()
+            if move is None:
+                winner = check_game_end()
+                continue
             last_move = tuple(move)
             active_sub = (move[0]%3, move[1]%3)
             if macro_board[active_sub[0]][active_sub[1]]:
