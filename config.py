@@ -1,0 +1,7 @@
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 600
+FPS = 60
+
+# צבעים
+BLACK = (0, 0, 0)
+GRAY = (200, 200, 200)
