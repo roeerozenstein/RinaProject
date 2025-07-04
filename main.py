@@ -2,7 +2,7 @@ import pygame
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from board import BigBoard
 from ai import AIPlayer
-ai = AIPlayer('O')
+ai = AIPlayer('O', max_depth = 4)
 
 
 
