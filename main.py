@@ -1,6 +1,10 @@
 import pygame
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from board import BigBoard
+from ai import AIPlayer
+ai = AIPlayer('O')
+
+
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -37,6 +41,27 @@ def main():
                             deletes_left[current_player] -= 1
                             current_player = 'O' if current_player == 'X' else 'X'
 
+            elif event.type == pygame.USEREVENT and current_player == 'O_WAITING':
+                move = ai.get_move(big_board)
+                if move:
+                    r, c, i, j = move
+                    sb = big_board.small_boards[r][c]
+                    if sb.grid[i][j] == '':
+                        sb.grid[i][j] = 'O'
+                        sb.check_winner()
+                        big_board.check_winner()
+                        big_board.active_board = (i, j)
+                        if big_board.small_boards[i][j].winner:
+                            big_board.active_board = None
+                        current_player = 'X'
+                        pygame.time.set_timer(pygame.USEREVENT, 0)  # בטל את הטיימר
+       
+        if current_player == 'O' and not big_board.winner:
+            pygame.time.set_timer(pygame.USEREVENT, 300)  # הפעל אירוע מותאם אישית לאחר 300ms
+            current_player = 'O_WAITING'  # מצב ביניים: מחכים לסוכן
+
+  
+        
         big_board.draw(screen)
         
         font = pygame.font.SysFont(None, 30)
