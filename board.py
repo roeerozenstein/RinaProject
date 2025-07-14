@@ -122,8 +122,16 @@ class BigBoard:
                     surface.blit(glow_surf, (bx-4, by-4), special_flags=pygame.BLEND_RGBA_ADD)
                 # Draw main border
                 pygame.draw.rect(surface, NEON_BLUE, (bx, by, 3*CELL_SIZE, 3*CELL_SIZE), 4, border_radius=14)
-                # Highlight active board (where the next move must be played)
-                if self.active_board is not None and (r, c) == self.active_board:
+                # Highlight active board(s)
+                highlight_this = False
+                if self.active_board is not None:
+                    if (r, c) == self.active_board:
+                        highlight_this = True
+                else:
+                    # highlight all available boards
+                    if self.small_boards[r][c].winner is None and not self.is_board_full(r, c):
+                        highlight_this = True
+                if highlight_this:
                     active_glow = pygame.Surface((3*CELL_SIZE+16, 3*CELL_SIZE+16), pygame.SRCALPHA)
                     for i in range(18, 0, -3):
                         pygame.draw.rect(active_glow, (*NEON_BLUE, 120), (8-i, 8-i, 3*CELL_SIZE+16+2*i, 3*CELL_SIZE+16+2*i), border_radius=22)
@@ -166,10 +174,19 @@ class BigBoard:
     def handle_click(self, pos, current_player):
         if self.winner:
             return False
+        # בדוק אם הלוח הפעיל תפוס (מלא או ניצח), ואם כן אפשר לשחק בכל לוח פתוח
+        if self.active_board:
+            r, c = self.active_board
+            if self.small_boards[r][c].winner is not None or self.is_board_full(r, c):
+                allowed_boards = None  # כל לוח פתוח
+            else:
+                allowed_boards = [self.active_board]
+        else:
+            allowed_boards = None  # כל לוח פתוח
         for r in range(3):
             for c in range(3):
-                # אם יש לוח פעיל – נוודא שרק בו אפשר לשחק
-                if self.active_board and (r, c) != self.active_board:
+                # אם יש לוח פעיל (והוא לא תפוס) – נוודא שרק בו אפשר לשחק
+                if allowed_boards is not None and (r, c) not in allowed_boards:
                     continue
                 offset_x = c * 3 * CELL_SIZE + (c + 1) * PADDING
                 offset_y = r * 3 * CELL_SIZE + (r + 1) * PADDING
@@ -179,12 +196,12 @@ class BigBoard:
                     # קובע את הלוח הבא לפי התא שנבחר
                     cell_x = (pos[0] - offset_x) // CELL_SIZE
                     cell_y = (pos[1] - offset_y) // CELL_SIZE
-                    self.active_board = (cell_y, cell_x)
+                    next_board = (cell_y, cell_x)
                     # אם הלוח הבא כבר נגמר או מלא – נאפשר שחק בכל לוח פתוח
-                    if self.active_board:
-                        next_r, next_c = self.active_board
-                        if self.small_boards[next_r][next_c].winner is not None or self.is_board_full(next_r, next_c):
-                            self.active_board = None
+                    if self.small_boards[cell_y][cell_x].winner is not None or self.is_board_full(cell_y, cell_x):
+                        self.active_board = None
+                    else:
+                        self.active_board = next_board
                     self.last_move = (r, c, cell_y, cell_x)
                     return True
         return False
