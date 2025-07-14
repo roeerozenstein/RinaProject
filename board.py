@@ -78,6 +78,7 @@ class BigBoard:
         self.small_boards = [[SmallBoard(r, c) for c in range(3)] for r in range(3)]
         self.winner = None
         self.active_board = None  
+        self.last_move = None  # (r, c, i, j)
 
 
     def check_winner(self):
@@ -107,6 +108,11 @@ class BigBoard:
                 by = r * 3 * CELL_SIZE + (r + 1) * PADDING + offset_y
                 if self.active_board is None or self.active_board == (r, c):
                     pygame.draw.rect(surface, (0, 200, 0), (bx - 2, by - 2, 3 * CELL_SIZE + 4, 3 * CELL_SIZE + 4), 2)
+                # הדגשת המהלך האחרון
+                if self.last_move and (r, c) == (self.last_move[0], self.last_move[1]):
+                    i, j = self.last_move[2], self.last_move[3]
+                    cell_rect = (bx + j * CELL_SIZE, by + i * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                    pygame.draw.rect(surface, (102, 255, 102), cell_rect)
                 self.small_boards[r][c].draw(surface, bx, by)
         for i in range(1, 3):
             pygame.draw.line(surface, BLACK,
@@ -146,6 +152,7 @@ class BigBoard:
                         next_r, next_c = self.active_board
                         if self.small_boards[next_r][next_c].winner is not None or self.is_board_full(next_r, next_c):
                             self.active_board = None
+                    self.last_move = (r, c, cell_y, cell_x)
                     return True
         return False
     
@@ -169,6 +176,7 @@ class BigBoard:
                         self.active_board = (cell_y, cell_x)
                         if self.small_boards[cell_y][cell_x].winner is not None or self.is_board_full(cell_y, cell_x):
                             self.active_board = None
+                        self.last_move = (r, c, cell_y, cell_x)
                         return True
         return False
 

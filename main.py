@@ -1,6 +1,6 @@
 import pygame
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
-from board import BigBoard
+from board import BigBoard, CELL_SIZE, PADDING
 from ai import AIPlayer
 ai = AIPlayer('O', max_depth = 4)
 
@@ -18,11 +18,6 @@ pygame.display.set_caption("Advanced Tic Tac Toe")
 clock = pygame.time.Clock()
 
 reset_game()
-
-
-big_board = BigBoard()
-current_player = 'X'
-deletes_left = {'X': 3, 'O': 3}
 
 
 def show_start_screen():
@@ -147,12 +142,31 @@ def main():
                 if event.button == 1:  # לחיצה רגילה - משחק רגיל
                     played = big_board.handle_click(adj_pos, current_player)
                     if played:
+                        # עדכן מהלך אחרון
+                        for r in range(3):
+                            for c in range(3):
+                                offset_x = c * 3 * CELL_SIZE + (c + 1) * PADDING
+                                offset_y = r * 3 * CELL_SIZE + (r + 1) * PADDING
+                                cell_x = (adj_pos[0] - offset_x) // CELL_SIZE
+                                cell_y = (adj_pos[1] - offset_y) // CELL_SIZE
+                                if 0 <= cell_x < 3 and 0 <= cell_y < 3:
+                                    if big_board.small_boards[r][c].grid[cell_y][cell_x] == current_player:
+                                        big_board.last_move = (r, c, cell_y, cell_x)
                         current_player = 'O' if current_player == 'X' else 'X'
 
                 elif event.button == 3:  # כפתור ימני - ניסיון למחוק סמל
                     if deletes_left[current_player] > 0:
                         deleted = big_board.handle_delete(adj_pos, current_player)
                         if deleted:
+                            # עדכן מהלך אחרון
+                            for r in range(3):
+                                for c in range(3):
+                                    offset_x = c * 3 * CELL_SIZE + (c + 1) * PADDING
+                                    offset_y = r * 3 * CELL_SIZE + (r + 1) * PADDING
+                                    cell_x = (adj_pos[0] - offset_x) // CELL_SIZE
+                                    cell_y = (adj_pos[1] - offset_y) // CELL_SIZE
+                                    if 0 <= cell_x < 3 and 0 <= cell_y < 3:
+                                        big_board.last_move = (r, c, cell_y, cell_x)
                             deletes_left[current_player] -= 1
                             current_player = 'O' if current_player == 'X' else 'X'
 
@@ -168,6 +182,7 @@ def main():
                         big_board.active_board = (i, j)
                         if big_board.small_boards[i][j].winner:
                             big_board.active_board = None
+                        big_board.last_move = (r, c, i, j)
                         current_player = 'X'
                         pygame.time.set_timer(pygame.USEREVENT, 0)
                     elif action == 'delete' and sb.grid[i][j] == 'X' and deletes_left['O'] > 0:
@@ -177,6 +192,7 @@ def main():
                         big_board.active_board = (i, j)
                         if big_board.small_boards[i][j].winner:
                             big_board.active_board = None
+                        big_board.last_move = (r, c, i, j)
                         deletes_left['O'] -= 1
                         current_player = 'X'
                         pygame.time.set_timer(pygame.USEREVENT, 0)
