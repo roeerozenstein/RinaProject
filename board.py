@@ -230,3 +230,14 @@ class BigBoard:
                         return True
         return False
 
+    def has_any_available_board(self):
+        for r in range(3):
+            for c in range(3):
+                sb = self.small_boards[r][c]
+                if sb.winner is None:
+                    for row in sb.grid:
+                        for cell in row:
+                            if cell == '':
+                                return True
+        return False
+

@@ -129,6 +129,8 @@ def main():
         border_color = (0, 255, 255)
         pygame.draw.rect(screen, border_color, button_rect, 3, border_radius=8)
         screen.blit(button_text, (button_x + (button_w - button_text.get_width()) // 2, button_y + (button_h - button_text.get_height()) // 2))
+        # (הסרתי את כפתור SHOW TIE MESSAGE וכל הלוגיקה שלו)
+
         # מסגרת דקה מתחת לפס
         pygame.draw.line(screen, (189, 195, 199), (0, TOP_BAR_HEIGHT), (SCREEN_WIDTH, TOP_BAR_HEIGHT), 3)
 
@@ -216,16 +218,7 @@ def main():
   
         
         # הודעת סיום משחק יפה
-        def is_full_board():
-            for r in range(3):
-                for c in range(3):
-                    sb = big_board.small_boards[r][c]
-                    for row in sb.grid:
-                        for cell in row:
-                            if cell == '':
-                                return False
-            return True
-        if big_board.winner or is_full_board():
+        if big_board.winner or not big_board.has_any_available_board():
             overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
             overlay.fill((44, 62, 80, 180))
             screen.blit(overlay, (0, 0))
@@ -233,17 +226,33 @@ def main():
             if big_board.winner:
                 msg = f"{big_board.winner} wins!"
                 color = (231, 76, 60) if big_board.winner == 'O' else (52, 152, 219)
+                # צל
+                text = font.render(msg, True, (30, 30, 30))
+                text_rect = text.get_rect(center=(SCREEN_WIDTH // 2 + 4, SCREEN_HEIGHT // 2 + 4))
+                screen.blit(text, text_rect)
+                # טקסט צבעוני
+                text = font.render(msg, True, color)
+                text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+                screen.blit(text, text_rect)
             else:
-                msg = "Draw!"
+                small_font = pygame.font.SysFont('arial', 44, bold=True)
+                msg1 = "It's a tie!"
+                msg2 = "Nobody wins this round"
                 color = (241, 196, 15)
-            # צל
-            text = font.render(msg, True, (30, 30, 30))
-            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2 + 4, SCREEN_HEIGHT // 2 + 4))
-            screen.blit(text, text_rect)
-            # טקסט צבעוני
-            text = font.render(msg, True, color)
-            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-            screen.blit(text, text_rect)
+                # צל
+                text1 = small_font.render(msg1, True, (30, 30, 30))
+                text2 = small_font.render(msg2, True, (30, 30, 30))
+                text1_rect = text1.get_rect(center=(SCREEN_WIDTH // 2 + 4, SCREEN_HEIGHT // 2 - 24 + 4))
+                text2_rect = text2.get_rect(center=(SCREEN_WIDTH // 2 + 4, SCREEN_HEIGHT // 2 + 24 + 4))
+                screen.blit(text1, text1_rect)
+                screen.blit(text2, text2_rect)
+                # טקסט צבעוני
+                text1 = small_font.render(msg1, True, color)
+                text2 = small_font.render(msg2, True, color)
+                text1_rect = text1.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 24))
+                text2_rect = text2.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 24))
+                screen.blit(text1, text1_rect)
+                screen.blit(text2, text2_rect)
 
         pygame.display.flip()
         clock.tick(FPS)
