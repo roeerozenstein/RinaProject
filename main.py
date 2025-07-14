@@ -125,6 +125,9 @@ def main():
         else:
             button_color = (0, 60, 120)  # כחול עמוק רגיל
         pygame.draw.rect(screen, button_color, button_rect, border_radius=8)
+        # מסגרת תכלת זוהרת
+        border_color = (0, 255, 255)
+        pygame.draw.rect(screen, border_color, button_rect, 3, border_radius=8)
         screen.blit(button_text, (button_x + (button_w - button_text.get_width()) // 2, button_y + (button_h - button_text.get_height()) // 2))
         # מסגרת דקה מתחת לפס
         pygame.draw.line(screen, (189, 195, 199), (0, TOP_BAR_HEIGHT), (SCREEN_WIDTH, TOP_BAR_HEIGHT), 3)
