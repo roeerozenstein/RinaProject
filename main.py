@@ -116,9 +116,14 @@ def main():
         pygame.draw.rect(screen, (30, 30, 30), shadow_rect, border_radius=8)
         mouse_pos = pygame.mouse.get_pos()
         if button_rect.collidepoint(mouse_pos):
-            button_color = (30, 130, 76)  # ירוק כהה יותר ב-hover
+            button_color = (0, 120, 255)  # כחול ניאון ב-hover
+            # אפקט זוהר תואם לגודל הכפתור
+            glow_surf = pygame.Surface((button_w, button_h), pygame.SRCALPHA)
+            for i in range(8, 0, -2):
+                pygame.draw.rect(glow_surf, (0, 200, 255, 60), (i, i, button_w-2*i, button_h-2*i), border_radius=8)
+            screen.blit(glow_surf, (button_x, button_y), special_flags=pygame.BLEND_RGBA_ADD)
         else:
-            button_color = (39, 174, 96)
+            button_color = (0, 60, 120)  # כחול עמוק רגיל
         pygame.draw.rect(screen, button_color, button_rect, border_radius=8)
         screen.blit(button_text, (button_x + (button_w - button_text.get_width()) // 2, button_y + (button_h - button_text.get_height()) // 2))
         # מסגרת דקה מתחת לפס

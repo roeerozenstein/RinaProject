@@ -102,25 +102,58 @@ class BigBoard:
         return None
 
     def draw(self, surface, offset_x=0, offset_y=0):
+        # Neon style colors
+        NEON_RED = (255, 40, 40)
+        NEON_BLUE = (0, 200, 255)
+        DARK_BG = (20, 20, 40)
+        GLOW_ALPHA = 90
+        # Fill background (if this is the main board)
+        if offset_x == 0 and offset_y == 0:
+            surface.fill(DARK_BG)
         for r in range(3):
             for c in range(3):
                 bx = c * 3 * CELL_SIZE + (c + 1) * PADDING + offset_x
                 by = r * 3 * CELL_SIZE + (r + 1) * PADDING + offset_y
-                if self.active_board is None or self.active_board == (r, c):
-                    pygame.draw.rect(surface, (0, 200, 0), (bx - 2, by - 2, 3 * CELL_SIZE + 4, 3 * CELL_SIZE + 4), 2)
-                # הדגשת המהלך האחרון
+                # Draw neon glow for main board border only
+                if offset_x == 0 and offset_y == 0:
+                    glow_surf = pygame.Surface((3*CELL_SIZE+8, 3*CELL_SIZE+8), pygame.SRCALPHA)
+                    for i in range(12, 0, -3):
+                        pygame.draw.rect(glow_surf, (*NEON_BLUE, GLOW_ALPHA), (4-i, 4-i, 3*CELL_SIZE+8+2*i, 3*CELL_SIZE+8+2*i), border_radius=18)
+                    surface.blit(glow_surf, (bx-4, by-4), special_flags=pygame.BLEND_RGBA_ADD)
+                # Draw main border
+                pygame.draw.rect(surface, NEON_BLUE, (bx, by, 3*CELL_SIZE, 3*CELL_SIZE), 4, border_radius=14)
+                # Highlight active board (where the next move must be played)
+                if self.active_board is not None and (r, c) == self.active_board:
+                    active_glow = pygame.Surface((3*CELL_SIZE+16, 3*CELL_SIZE+16), pygame.SRCALPHA)
+                    for i in range(18, 0, -3):
+                        pygame.draw.rect(active_glow, (*NEON_BLUE, 120), (8-i, 8-i, 3*CELL_SIZE+16+2*i, 3*CELL_SIZE+16+2*i), border_radius=22)
+                    surface.blit(active_glow, (bx-8, by-8), special_flags=pygame.BLEND_RGBA_ADD)
+                    pygame.draw.rect(surface, NEON_BLUE, (bx-2, by-2, 3*CELL_SIZE+4, 3*CELL_SIZE+4), 6, border_radius=16)
+                # Highlight last move (neon green, but only as a border)
                 if self.last_move and (r, c) == (self.last_move[0], self.last_move[1]):
                     i, j = self.last_move[2], self.last_move[3]
                     cell_rect = (bx + j * CELL_SIZE, by + i * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-                    pygame.draw.rect(surface, (102, 255, 102), cell_rect)
+                    pygame.draw.rect(surface, (102,255,102), cell_rect, 5, border_radius=8)
+                # Draw the small board
                 self.small_boards[r][c].draw(surface, bx, by)
+                # Draw thin neon cell lines (inside small board)
+                for i in range(1, 3):
+                    # Vertical
+                    pygame.draw.line(surface, NEON_BLUE, (bx + i*CELL_SIZE, by), (bx + i*CELL_SIZE, by + 3*CELL_SIZE), 2)
+                    # Horizontal
+                    pygame.draw.line(surface, NEON_BLUE, (bx, by + i*CELL_SIZE), (bx + 3*CELL_SIZE, by + i*CELL_SIZE), 2)
+        # Draw thick neon lines between boards
         for i in range(1, 3):
-            pygame.draw.line(surface, BLACK,
-                             (offset_x, offset_y + i * (3 * CELL_SIZE + PADDING)),
-                             (offset_x + 3 * 3 * CELL_SIZE + 4 * PADDING, offset_y + i * (3 * CELL_SIZE + PADDING)), 4)
-            pygame.draw.line(surface, BLACK,
-                             (offset_x + i * (3 * CELL_SIZE + PADDING), offset_y),
-                             (offset_x + i * (3 * CELL_SIZE + PADDING), offset_y + 3 * 3 * CELL_SIZE + 4 * PADDING), 4)
+            glow_line = pygame.Surface((surface.get_width(), 12), pygame.SRCALPHA)
+            for k in range(10, 0, -2):
+                pygame.draw.line(glow_line, (*NEON_BLUE, 60), (0, 6), (surface.get_width(), 6), 12-k)
+            surface.blit(glow_line, (0, offset_y + i * (3 * CELL_SIZE + PADDING) - 6), special_flags=pygame.BLEND_RGBA_ADD)
+            pygame.draw.line(surface, NEON_BLUE, (offset_x, offset_y + i * (3 * CELL_SIZE + PADDING)), (offset_x + 3 * 3 * CELL_SIZE + 4 * PADDING, offset_y + i * (3 * CELL_SIZE + PADDING)), 6)
+            glow_line2 = pygame.Surface((12, surface.get_height()), pygame.SRCALPHA)
+            for k in range(10, 0, -2):
+                pygame.draw.line(glow_line2, (*NEON_BLUE, 60), (6, 0), (6, surface.get_height()), 12-k)
+            surface.blit(glow_line2, (offset_x + i * (3 * CELL_SIZE + PADDING) - 6, 0), special_flags=pygame.BLEND_RGBA_ADD)
+            pygame.draw.line(surface, NEON_BLUE, (offset_x + i * (3 * CELL_SIZE + PADDING), offset_y), (offset_x + i * (3 * CELL_SIZE + PADDING), offset_y + 3 * 3 * CELL_SIZE + 4 * PADDING), 6)
 
     def is_board_full(self, r, c):
         sb = self.small_boards[r][c]
