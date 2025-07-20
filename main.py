@@ -2,7 +2,7 @@ import pygame
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from board import BigBoard, CELL_SIZE, PADDING
 from ai import AIPlayer
-ai = AIPlayer('O', max_depth = 4)
+ai = AIPlayer('O', max_depth = 5)
 
 
 def reset_game():
